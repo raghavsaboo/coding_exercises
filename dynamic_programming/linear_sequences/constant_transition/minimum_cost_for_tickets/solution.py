@@ -40,3 +40,86 @@ days is in strictly increasing order.
 costs.length == 3
 1 <= costs[i] <= 1000
 """
+
+from typing import List
+
+def min_cost_tickets(days: List[int], costs: List[int]) -> int:
+    
+    def min_cost_recursive(days: List[int], costs: List[int], idx: int, memo: dict) -> int:
+        if idx >= len(days):
+            return 0
+        
+        if idx in memo:
+            return memo[idx]
+        
+        # One day pass
+        one_day_pass = costs[0] + min_cost_recursive(days, costs, idx + 1, memo)
+        
+        # Seven day pass
+        j = idx
+        while j < len(days) and days[j] < days[idx] + 7:
+            j += 1
+        seven_day_pass = costs[1] + min_cost_recursive(days, costs, j, memo)
+        
+        # Thirty day pass
+        j = idx
+        while j < len(days) and days[j] < days[idx] + 30:
+            j += 1
+        thirty_day_pass = costs[2] + min_cost_recursive(days, costs, j, memo)
+        
+        memo[idx] = min(one_day_pass, seven_day_pass, thirty_day_pass)
+        return memo[idx]
+
+    return min_cost_recursive(days, costs, 0, {})
+
+
+def min_cost_memoization(days: List[int], costs: List[int]) -> int:
+    memo = {}
+
+    def min_cost_recursive(idx: int) -> int:
+        if idx >= len(days):
+            return 0
+        
+        if idx in memo:
+            return memo[idx]
+        
+        # One day pass
+        one_day_pass = costs[0] + min_cost_recursive(idx + 1)
+        
+        # Seven day pass
+        j = idx
+        while j < len(days) and days[j] < days[idx] + 7:
+            j += 1
+        seven_day_pass = costs[1] + min_cost_recursive(j)
+        
+        # Thirty day pass
+        j = idx
+        while j < len(days) and days[j] < days[idx] + 30:
+            j += 1
+        thirty_day_pass = costs[2] + min_cost_recursive(j)
+        
+        memo[idx] = min(one_day_pass, seven_day_pass, thirty_day_pass)
+        return memo[idx]
+
+    return min_cost_recursive(0)
+
+
+def min_cost_bottom_up(days: List[int], costs: List[int]) -> int:
+    last_day = days[-1]
+    dp = [0] * (last_day + 1)
+    days_set = set(days)
+    
+    for i in range(1, last_day + 1):
+        if i not in days_set:
+            dp[i] = dp[i - 1]
+        else:
+            dp[i] = min(dp[max(0, i - 1)] + costs[0],
+                        dp[max(0, i - 7)] + costs[1],
+                        dp[max(0, i - 30)] + costs[2])
+
+    return dp[last_day]
+
+
+days = [1, 4, 6, 7, 8, 20]
+costs = [2, 7, 15]
+assert min_cost_bottom_up(days, costs) == 11
